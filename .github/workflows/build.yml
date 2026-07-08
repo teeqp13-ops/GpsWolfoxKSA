@@ -9,6 +9,10 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   build:
     name: Build DEB Package
@@ -25,20 +29,27 @@ jobs:
 
       - name: Build package
         run: |
+          set -e
           make clean || true
           make package FINALPACKAGE=1
 
-      - name: List built packages
+      - name: Collect build artifacts
+        if: always()
         run: |
-          echo "Built DEB files:"
-          find packages .theos/packages -type f -name "*.deb" 2>/dev/null || true
+          mkdir -p artifacts
+          echo "Searching for DEB files..." | tee artifacts/build-info.txt
+          find . -type f -name "*.deb" -not -path "./.git/*" -print | tee artifacts/deb-list.txt
+          while IFS= read -r deb; do
+            [ -n "$deb" ] && cp -v "$deb" artifacts/
+          done < artifacts/deb-list.txt
+          echo "Artifact folder content:" | tee -a artifacts/build-info.txt
+          ls -lah artifacts | tee -a artifacts/build-info.txt
 
       - name: Upload DEB Artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: GPSPlus-DEB-Packages
-          path: |
-            packages/*.deb
-            .theos/packages/*.deb
-          if-no-files-found: error
+          path: artifacts/
+          if-no-files-found: warn
           retention-days: 30
