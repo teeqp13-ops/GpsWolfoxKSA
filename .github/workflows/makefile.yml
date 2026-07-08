@@ -14,12 +14,25 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Setup Theos
+      run: |
+        git clone --recursive https://github.com/theos/theos.git $THEOS
+        $THEOS/bin/update-theos
+      env:
+        THEOS: /opt/theos
+
     - name: Install dependencies
       run: make
+      env:
+        THEOS: /opt/theos
 
     - name: Run check
       run: make check
+      env:
+        THEOS: /opt/theos
 
     - name: Run distcheck
       run: make distcheck
+      env:
+        THEOS: /opt/theos
 
