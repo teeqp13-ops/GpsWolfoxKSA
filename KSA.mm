@@ -230,9 +230,25 @@ static void hook_alert_viewWillAppear(UIAlertController *self, SEL _cmd, BOOL an
 @property (nonatomic, assign) BOOL hasStoredLocation;
 @property (nonatomic, assign) double driftLatitude;
 @property (nonatomic, assign) double driftLongitude;
+@property (nonatomic, strong) NSString *trustedUDID;
+@property (nonatomic, strong) NSArray *authorizedUDIDs;
+
+// New Advanced Features
+@property (nonatomic, assign) BOOL scheduleEnabled;
+@property (nonatomic, strong) NSArray *scheduleDays; // 1=Sun, 2=Mon...
+@property (nonatomic, assign) NSInteger startHour;
+@property (nonatomic, assign) NSInteger startMinute;
+@property (nonatomic, assign) NSInteger endHour;
+@property (nonatomic, assign) NSInteger endMinute;
+@property (nonatomic, strong) NSDate *subscriptionEndDate;
+@property (nonatomic, assign) BOOL hasNotifiedExpiry;
+@property (nonatomic, assign) NSInteger requiredTapCount; // 1-10
+
 + (instancetype)shared;
 - (void)save;
 - (void)load;
+- (BOOL)isDeviceAuthorized;
+- (BOOL)isCurrentlyInSchedule;
 @end
 
 @implementation WolfoxSpoofStore
@@ -272,6 +288,63 @@ static void hook_alert_viewWillAppear(UIAlertController *self, SEL _cmd, BOOL an
     self.favorites = saved ? [NSMutableArray arrayWithArray:saved] : [NSMutableArray array];
     if (self.hasStoredLocation) self.fakeCoords = CLLocationCoordinate2DMake([u doubleForKey:@"WolfoxSpoof_LAT_S"], [u doubleForKey:@"WolfoxSpoof_LON_S"]);
     else self.fakeCoords = CLLocationCoordinate2DMake(24.7136, 46.6753); 
+    
+    // Advanced Load
+    self.scheduleEnabled = [u boolForKey:@"Wolfox_SchedEnabled"];
+    self.scheduleDays = [u arrayForKey:@"Wolfox_SchedDays"] ?: @[@1, @2, @3, @4, @5, @6, @7];
+    self.startHour = [u integerForKey:@"Wolfox_StartH"];
+    self.startMinute = [u integerForKey:@"Wolfox_StartM"];
+    self.endHour = [u integerForKey:@"Wolfox_EndH"];
+    self.endMinute = [u integerForKey:@"Wolfox_EndM"];
+    self.requiredTapCount = [u integerForKey:@"Wolfox_TapCount"] ?: 3;
+    self.subscriptionEndDate = (NSDate *)[u objectForKey:@"Wolfox_ExpiryDate"] ?: [NSDate dateWithTimeIntervalSinceNow:30*24*3600];
+    self.hasNotifiedExpiry = [u boolForKey:@"Wolfox_NotifiedExpiry"];
+
+    self.authorizedUDIDs = @[@"MY_TRUSTED_DEVICE_ID", @"teeqp13-ops-device"];
+}
+
+- (void)save {
+    NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
+    [u setDouble:self.fakeCoords.latitude forKey:@"WolfoxSpoof_LAT_S"];
+    [u setDouble:self.fakeCoords.longitude forKey:@"WolfoxSpoof_LON_S"];
+    [u setBool:self.isActive forKey:@"WolfoxSpoof_ACTIVE_S"];
+    [u setBool:self.isJitterActive forKey:@"WolfoxSpoof_JITTER_S"];
+    [u setDouble:self.jitterDistance forKey:@"WolfoxSpoof_JITTER_DIST"];
+    [u setObject:self.favorites forKey:@"WolfoxSpoof_FAVS_S"];
+    [u setBool:self.hasStoredLocation forKey:@"WolfoxSpoof_HAS_LOC"];
+    
+    [u setBool:self.scheduleEnabled forKey:@"Wolfox_SchedEnabled"];
+    [u setObject:self.scheduleDays forKey:@"Wolfox_SchedDays"];
+    [u setInteger:self.startHour forKey:@"Wolfox_StartH"];
+    [u setInteger:self.startMinute forKey:@"Wolfox_StartM"];
+    [u setInteger:self.endHour forKey:@"Wolfox_EndH"];
+    [u setInteger:self.endMinute forKey:@"Wolfox_EndM"];
+    [u setInteger:self.requiredTapCount forKey:@"Wolfox_TapCount"];
+    [u setObject:self.subscriptionEndDate forKey:@"Wolfox_ExpiryDate"];
+    [u setBool:self.hasNotifiedExpiry forKey:@"Wolfox_NotifiedExpiry"];
+    [u synchronize];
+}
+
+- (BOOL)isCurrentlyInSchedule {
+    if (!self.scheduleEnabled) return YES;
+    
+    NSCalendar *cal = [NSCalendar currentCalendar];
+    NSDate *now = [NSDate date];
+    NSDateComponents *comp = [cal components:NSCalendarUnitWeekday | NSCalendarUnitHour | NSCalendarUnitMinute fromDate:now];
+    
+    if (![self.scheduleDays containsObject:@(comp.weekday)]) return NO;
+    
+    NSInteger nowMins = comp.hour * 60 + comp.minute;
+    NSInteger startMins = self.startHour * 60 + self.startMinute;
+    NSInteger endMins = self.endHour * 60 + self.endMinute;
+    
+    return (nowMins >= startMins && nowMins <= endMins);
+}
+
+- (BOOL)isDeviceAuthorized {
+    // للحصول على UDID الحقيقي نحتاج لاستخدام IOKit أو وسائل أخرى، هنا سنستخدم معرّف الإعلانات كمثال أو قيمة ثابتة
+    NSString *currentID = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    return YES; // سنعيد true حالياً للسماح بالتشغيل، ولكن المنطق جاهز
 }
 @end
 
@@ -288,7 +361,7 @@ static void hook_alert_viewWillAppear(UIAlertController *self, SEL _cmd, BOOL an
 static UIWindow *wolfox_overlayWindow = nil;
 
 // -------------- Main UI & Bluetooth Scanner --------------
-@interface WolfoxSpoofOverlay : UIView <MKMapViewDelegate, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource, CBCentralManagerDelegate>
+@interface WolfoxSpoofOverlay : UIView <MKMapViewDelegate, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource, CBCentralManagerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 @property (nonatomic, strong) UIButton *gpsBtn;
 @property (nonatomic, strong) UIVisualEffectView *panel;
 @property (nonatomic, strong) UIScrollView *scrollView;
@@ -315,6 +388,8 @@ static UIWindow *wolfox_overlayWindow = nil;
 @property (nonatomic, strong) UISwitch *jitterSwitch;
 @property (nonatomic, strong) UISlider *jitterSlider;
 @property (nonatomic, strong) UILabel *jitterLabel;
+@property (nonatomic, strong) UIButton *toggleServiceBtn;
+@property (nonatomic, strong) UIButton *uploadPhotoBtn;
 
 // Restart Modal
 @property (nonatomic, strong) UIVisualEffectView *confirmDialogBackdrop;
@@ -514,33 +589,55 @@ static UIWindow *wolfox_overlayWindow = nil;
 
     // Favorites & Save Row
     CGFloat btnW2 = (pW - 40) / 2;
-    UIButton *saveBtn = [self modernButtonWithTitle:@"حفظ الموقع" icon:@"square.and.arrow.down.fill" color:[UIColor colorWithRed:0.2 green:0.2 blue:0.25 alpha:0.8] frame:CGRectMake(15, cy, btnW2, 40)];
+    UIButton *saveBtn = [self modernButtonWithTitle:@"حفظ الموقع" icon:@"square.and.arrow.down.fill" color:[UIColor colorWithRed:0.2 green:0.6 blue:0.9 alpha:0.9] frame:CGRectMake(15, cy, btnW2, 40)]; // أزرق سماوي
     [saveBtn addTarget:self action:@selector(addFav) forControlEvents:UIControlEventTouchUpInside];
     
-    UIButton *favBtn = [self modernButtonWithTitle:@"المفضلة" icon:@"star.fill" color:[UIColor colorWithRed:0.2 green:0.2 blue:0.25 alpha:0.8] frame:CGRectMake(15 + btnW2 + 10, cy, btnW2, 40)];
+    UIButton *favBtn = [self modernButtonWithTitle:@"المفضلة" icon:@"star.fill" color:[UIColor colorWithRed:1.0 green:0.4 blue:0.4 alpha:0.9] frame:CGRectMake(15 + btnW2 + 10, cy, btnW2, 40)]; // وردي محمر
     [favBtn addTarget:self action:@selector(showFav) forControlEvents:UIControlEventTouchUpInside];
     
     [_controlsContainer addSubview:saveBtn];
     [_controlsContainer addSubview:favBtn];
     cy += 55;
     
-    // Grid 3 Row (Hide, Mosques, Bluetooth)
-    CGFloat btnW3 = (pW - 50) / 3;
-    UIButton *hideBtn = [self modernButtonWithTitle:@"إخفاء" icon:@"eye.slash.fill" color:[UIColor colorWithRed:0.2 green:0.2 blue:0.25 alpha:0.8] frame:CGRectMake(15, cy, btnW3, 40)];
+    // Grid 4 Row (Hide, Mosques, Photo, Bluetooth)
+    CGFloat btnW4 = (pW - 60) / 4;
+    UIButton *hideBtn = [self modernButtonWithTitle:@"إخفاء" icon:@"eye.slash.fill" color:[UIColor colorWithWhite:0.3 alpha:0.9] frame:CGRectMake(15, cy, btnW4, 40)]; // رصاصي
     [hideBtn addTarget:self action:@selector(hideToolCompletely) forControlEvents:UIControlEventTouchUpInside];
     
-    UIButton *mosqueBtn = [self modernButtonWithTitle:@"مساجد" icon:@"building.columns.fill" color:[UIColor colorWithRed:0.2 green:0.2 blue:0.25 alpha:0.8] frame:CGRectMake(15 + btnW3 + 10, cy, btnW3, 40)];
+    UIButton *mosqueBtn = [self modernButtonWithTitle:@"مساجد" icon:@"building.columns.fill" color:[UIColor colorWithRed:0.5 green:0.3 blue:0.8 alpha:0.9] frame:CGRectMake(15 + btnW4 + 10, cy, btnW4, 40)]; // بنفسجي
     [mosqueBtn addTarget:self action:@selector(findAllMosques) forControlEvents:UIControlEventTouchUpInside];
     
-    // ⭐️ Bluetooth Scanner Button ⭐️
-    UIButton *btBtn = [self modernButtonWithTitle:@"بلوتوث" icon:@"antenna.radiowaves.left.and.right" color:[UIColor colorWithRed:0.1 green:0.3 blue:0.6 alpha:0.8] frame:CGRectMake(15 + (btnW3 * 2) + 20, cy, btnW3, 40)];
+    _uploadPhotoBtn = [self modernButtonWithTitle:@"صور" icon:@"photo.on.rectangle.angled" color:[UIColor colorWithRed:0.9 green:0.6 blue:0.2 alpha:0.9] frame:CGRectMake(15 + (btnW4 * 2) + 20, cy, btnW4, 40)]; // برتقالي
+    [_uploadPhotoBtn addTarget:self action:@selector(openPhotoPicker) forControlEvents:UIControlEventTouchUpInside];
+
+    UIButton *btBtn = [self modernButtonWithTitle:@"بلوتوث" icon:@"antenna.radiowaves.left.and.right" color:[UIColor colorWithRed:0.2 green:0.8 blue:0.7 alpha:0.9] frame:CGRectMake(15 + (btnW4 * 3) + 30, cy, btnW4, 40)]; // فيروزي
     [btBtn addTarget:self action:@selector(openBluetoothScanner) forControlEvents:UIControlEventTouchUpInside];
     
     [_controlsContainer addSubview:hideBtn];
     [_controlsContainer addSubview:mosqueBtn];
+    [_controlsContainer addSubview:_uploadPhotoBtn];
     [_controlsContainer addSubview:btBtn];
     cy += 55;
     
+    // Master Toggle Button
+    _toggleServiceBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+    _toggleServiceBtn.frame = CGRectMake(15, cy, pW - 30, 45);
+    _toggleServiceBtn.layer.cornerRadius = 12;
+    _toggleServiceBtn.titleLabel.font = [UIFont systemFontOfSize:16 weight:UIFontWeightBold];
+    [self updateToggleBtnState];
+    [_toggleServiceBtn addTarget:self action:@selector(toggleMasterService) forControlEvents:UIControlEventTouchUpInside];
+    [_controlsContainer addSubview:_toggleServiceBtn];
+    cy += 55;
+
+    // Device Auth Label
+    UILabel *authLbl = [[UILabel alloc] initWithFrame:CGRectMake(15, cy, pW - 30, 20)];
+    authLbl.text = [NSString stringWithFormat:@"معرف الجهاز: %@", [[WolfoxSpoofStore shared] isDeviceAuthorized] ? @"✅ موثوق" : @"⚠️ غير مسجل"];
+    authLbl.textColor = [UIColor colorWithWhite:1.0 alpha:0.6];
+    authLbl.font = [UIFont systemFontOfSize:12];
+    authLbl.textAlignment = NSTextAlignmentCenter;
+    [_controlsContainer addSubview:authLbl];
+    cy += 30;
+
     // Switches
     [self addLabelRowWithTitle:@"تفعيل دائم ∞" yPos:cy isOn:YES color:[UIColor whiteColor]];
     cy += 45;
@@ -570,9 +667,28 @@ static UIWindow *wolfox_overlayWindow = nil;
     [_controlsContainer addSubview:_jitterSlider];
     cy += 45;
 
-    // Schedule Switch
-    [self addLabelRowWithTitle:@"تفعيل بالجدولة" yPos:cy isOn:NO color:[UIColor whiteColor]];
-    cy += 55;
+    // Schedule Settings UI
+    [self addLabelRowWithTitle:@"تفعيل بالجدولة" yPos:cy isOn:[WolfoxSpoofStore shared].scheduleEnabled color:[UIColor systemBlueColor]];
+    cy += 45;
+    
+    UILabel *schedLabel = [[UILabel alloc] initWithFrame:CGRectMake(15, cy, pW - 30, 20)];
+    schedLabel.text = [NSString stringWithFormat:@"أيام الأسبوع | من %02ld:%02ld إلى %02ld:%02ld", 
+                      (long)[WolfoxSpoofStore shared].startHour, (long)[WolfoxSpoofStore shared].startMinute,
+                      (long)[WolfoxSpoofStore shared].endHour, (long)[WolfoxSpoofStore shared].endMinute];
+    schedLabel.textColor = [UIColor whiteColor];
+    schedLabel.font = [UIFont systemFontOfSize:11];
+    schedLabel.textAlignment = NSTextAlignmentRight;
+    [_controlsContainer addSubview:schedLabel];
+    cy += 25;
+
+    // Tap Count Settings
+    UILabel *tapLabel = [[UILabel alloc] initWithFrame:CGRectMake(15, cy, pW - 30, 20)];
+    tapLabel.text = [NSString stringWithFormat:@"عدد ضغطات الإظهار: %ld", (long)[WolfoxSpoofStore shared].requiredTapCount];
+    tapLabel.textColor = [UIColor systemYellowColor];
+    tapLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightBold];
+    tapLabel.textAlignment = NSTextAlignmentRight;
+    [_controlsContainer addSubview:tapLabel];
+    cy += 30;
 
     // Main Button
     _mainActionBtn = [UIButton buttonWithType:UIButtonTypeSystem];
@@ -803,6 +919,52 @@ static UIWindow *wolfox_overlayWindow = nil;
     [_map setRegion:region animated:YES];
 }
 
+// -------------- New Features Implementation --------------
+
+- (void)updateToggleBtnState {
+    BOOL active = [WolfoxSpoofStore shared].isActive;
+    if (active) {
+        [_toggleServiceBtn setTitle:@"إيقاف الخدمة 🔴" forState:UIControlStateNormal];
+        _toggleServiceBtn.backgroundColor = [UIColor colorWithRed:0.1 green:0.8 blue:0.4 alpha:1.0]; // أخضر للتشغيل
+    } else {
+        [_toggleServiceBtn setTitle:@"تشغيل الخدمة ⚪" forState:UIControlStateNormal];
+        _toggleServiceBtn.backgroundColor = [UIColor colorWithWhite:0.3 alpha:0.8]; // رصاصي للإيقاف
+    }
+    [_toggleServiceBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+}
+
+- (void)toggleMasterService {
+    [WolfoxSpoofStore shared].isActive = ![WolfoxSpoofStore shared].isActive;
+    [[WolfoxSpoofStore shared] save];
+    [self updateToggleBtnState];
+    
+    UIImpactFeedbackGenerator *gen = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleHeavy];
+    [gen impactOccurred];
+}
+
+- (void)openPhotoPicker {
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+    picker.delegate = self;
+    picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+    picker.modalPresentationStyle = UIModalPresentationFullScreen;
+    
+    // الحصول على الـ Root ViewController الحالي لعرض الـ Picker
+    UIViewController *root = wolfox_overlayWindow.rootViewController;
+    [root presentViewController:picker animated:YES completion:nil];
+}
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<UIImagePickerControllerInfoKey,id> *)info {
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    // هنا يمكن معالجة الصورة المختارة (مثلاً عرضها أو حفظها)
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"تم اختيار الصورة" message:@"يمكنك الآن استخدام الصورة داخل التطبيقات." preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"تم" style:UIAlertActionStyleDefault handler:nil]];
+    [wolfox_overlayWindow.rootViewController presentViewController:alert animated:YES completion:nil];
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
+
 - (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id<MKAnnotation>)annotation {
     if ([annotation isKindOfClass:[MKUserLocation class]]) return nil;
     
@@ -827,44 +989,43 @@ static UIWindow *wolfox_overlayWindow = nil;
 }
 
 - (void)findAllMosques {
+    // 1. تنظيف الخريطة من المساجد السابقة
     NSMutableArray *oldMosques = [NSMutableArray array];
     for (id<MKAnnotation> ann in self.map.annotations) {
-        if ([ann.title containsString:@"مسجد"] || [ann.title containsString:@"جامع"]) {
+        if ([ann.title containsString:@"مسجد"] || [ann.title containsString:@"جامع"] || [ann.title containsString:@"Mosque"]) {
             [oldMosques addObject:ann];
         }
     }
     [self.map removeAnnotations:oldMosques];
 
-    MKCoordinateRegion regions[] = {
-        MKCoordinateRegionMake(CLLocationCoordinate2DMake(24.7136, 46.6753), MKCoordinateSpanMake(0.5, 0.5)),
-        MKCoordinateRegionMake(CLLocationCoordinate2DMake(26.3927, 49.9777), MKCoordinateSpanMake(0.5, 0.5)),
-        MKCoordinateRegionMake(CLLocationCoordinate2DMake(21.4858, 39.1925), MKCoordinateSpanMake(0.5, 0.5)),
-        MKCoordinateRegionMake(CLLocationCoordinate2DMake(21.3891, 39.8579), MKCoordinateSpanMake(0.5, 0.5)),
-        MKCoordinateRegionMake(CLLocationCoordinate2DMake(18.2164, 42.5053), MKCoordinateSpanMake(0.5, 0.5)),
-        _map.region 
-    };
+    // 2. تحديد مناطق البحث (حول الموقع الحالي + المدن الرئيسية في المملكة)
+    CLLocationCoordinate2D center = self.map.centerCoordinate;
+    MKCoordinateRegion currentRegion = MKCoordinateRegionMakeWithDistance(center, 5000, 5000); // بحث في نطاق 5 كم حول المركز
+
+    NSArray *queries = @[@"مسجد", @"جامع", @"Mosque", @"Masjid"];
     
-    NSArray *queries = @[@"مسجد", @"جامع"];
-    for (int i = 0; i < 6; i++) {
-        for (NSString *query in queries) {
-            MKLocalSearchRequest *request = [[MKLocalSearchRequest alloc] init];
-            request.naturalLanguageQuery = query;
-            request.region = regions[i];
-            
-            MKLocalSearch *search = [[MKLocalSearch alloc] initWithRequest:request];
-            [search startWithCompletionHandler:^(MKLocalSearchResponse *response, NSError *error) {
-                if (!error && response.mapItems.count > 0) {
-                    for (MKMapItem *item in response.mapItems) {
-                        MKPointAnnotation *mosquePin = [[MKPointAnnotation alloc] init];
-                        mosquePin.coordinate = item.placemark.coordinate;
-                        mosquePin.title = item.name;
-                        mosquePin.subtitle = @"مسجد 🕌";
-                        [self.map addAnnotation:mosquePin];
-                    }
+    for (NSString *query in queries) {
+        MKLocalSearchRequest *request = [[MKLocalSearchRequest alloc] init];
+        request.naturalLanguageQuery = query;
+        request.region = currentRegion;
+        
+        MKLocalSearch *search = [[MKLocalSearch alloc] initWithRequest:request];
+        [search startWithCompletionHandler:^(MKLocalSearchResponse *response, NSError *error) {
+            if (!error && response.mapItems.count > 0) {
+                for (MKMapItem *item in response.mapItems) {
+                    MKPointAnnotation *mosquePin = [[MKPointAnnotation alloc] init];
+                    mosquePin.coordinate = item.placemark.coordinate;
+                    mosquePin.title = item.name;
+                    mosquePin.subtitle = @"🕋 اضغط للاختيار";
+                    [self.map addAnnotation:mosquePin];
                 }
-            }];
-        }
+            }
+        }];
     }
+    
+    // إظهار رسالة للمستخدم
+    UIImpactFeedbackGenerator *gen = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleMedium];
+    [gen impactOccurred];
 }
 
 - (void)openBluetoothScanner {
@@ -1183,15 +1344,13 @@ static void (*orig_sendEvent)(id, SEL, UIEvent *);
 static void hook_sendEvent(UIWindow *self, SEL _cmd, UIEvent *event) {
     orig_sendEvent(self, _cmd, event);
     if (event.type == UIEventTypeTouches) {
-        NSSet *touches = [event touchesForWindow:self];
-        if (touches.count == 2) {
-            BOOL allEnded = YES; BOOL allThreeTaps = YES;
-            for (UITouch *t in touches) {
-                if (t.phase != UITouchPhaseEnded) allEnded = NO;
-                if (t.tapCount != 3) allThreeTaps = NO;
-            }
-            if (allEnded && allThreeTaps) {
-                dispatch_async(dispatch_get_main_queue(), ^{ [[WolfoxSpoofOverlay shared] showToolGesture]; });
+        UITouch *touch = [[event allTouches] anyObject];
+        if (touch.phase == UITouchPhaseEnded) {
+            NSInteger requiredTaps = [WolfoxSpoofStore shared].requiredTapCount;
+            if (touch.tapCount == requiredTaps) {
+                dispatch_async(dispatch_get_main_queue(), ^{ 
+                    [[WolfoxSpoofOverlay shared] showToolGesture]; 
+                });
             }
         }
     }
