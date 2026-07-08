@@ -14,9 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: configure
-      run: ./configure
-
     - name: Install dependencies
       run: make
 
@@ -25,3 +22,4 @@ jobs:
 
     - name: Run distcheck
       run: make distcheck
+
