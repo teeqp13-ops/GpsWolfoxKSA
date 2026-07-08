@@ -266,17 +266,7 @@ static void hook_alert_viewWillAppear(UIAlertController *self, SEL _cmd, BOOL an
     }
     return self;
 }
-- (void)save {
-    NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
-    [u setDouble:self.fakeCoords.latitude forKey:@"WolfoxSpoof_LAT_S"];
-    [u setDouble:self.fakeCoords.longitude forKey:@"WolfoxSpoof_LON_S"];
-    [u setBool:self.isActive forKey:@"WolfoxSpoof_ACTIVE_S"];
-    [u setBool:self.isJitterActive forKey:@"WolfoxSpoof_JITTER_S"];
-    [u setDouble:self.jitterDistance forKey:@"WolfoxSpoof_JITTER_DIST"];
-    [u setObject:self.favorites forKey:@"WolfoxSpoof_FAVS_S"];
-    [u setBool:self.hasStoredLocation forKey:@"WolfoxSpoof_HAS_LOC"];
-    [u synchronize];
-}
+// Merged save method below
 - (void)load {
     NSUserDefaults *u = [NSUserDefaults standardUserDefaults];
     self.isActive = [u boolForKey:@"WolfoxSpoof_ACTIVE_S"];
@@ -343,7 +333,7 @@ static void hook_alert_viewWillAppear(UIAlertController *self, SEL _cmd, BOOL an
 
 - (BOOL)isDeviceAuthorized {
     // للحصول على UDID الحقيقي نحتاج لاستخدام IOKit أو وسائل أخرى، هنا سنستخدم معرّف الإعلانات كمثال أو قيمة ثابتة
-    NSString *currentID = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    // NSString *currentID = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
     return YES; // سنعيد true حالياً للسماح بالتشغيل، ولكن المنطق جاهز
 }
 @end
