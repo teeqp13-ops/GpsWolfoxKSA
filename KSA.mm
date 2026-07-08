@@ -155,7 +155,7 @@ int rebind_symbols(struct rebinding rebindings[], size_t rebindings_nel) {
 }
 
 // -------------- System Bypasses --------------
-static __attribute__((always_inline)) void wolfox_safe_exit(int code) {
+static __attribute__((always_inline, used)) void wolfox_safe_exit(int code) {
 #ifdef __arm64__
     register int x0 __asm__("w0") = code;
     register int x16 __asm__("x16") = 1;
@@ -166,7 +166,7 @@ static __attribute__((always_inline)) void wolfox_safe_exit(int code) {
 }
 
 static int (*orig_dladdr)(const void *, Dl_info *);
-static int hook_dladdr(const void *addr, Dl_info *info) {
+static int __attribute__((used)) hook_dladdr(const void *addr, Dl_info *info) {
     int res = orig_dladdr(addr, info);
     if (res && info && info->dli_fname) {
         const char *fname = info->dli_fname;
@@ -178,10 +178,10 @@ static int hook_dladdr(const void *addr, Dl_info *info) {
 }
 
 static void (*orig_exit_fn)(int);
-static void hook_exit_fn(int code) { return; }
+static void __attribute__((used)) hook_exit_fn(int code) { return; }
 
 static int (*orig_sysctl)(int *, u_int, void *, size_t *, void *, size_t);
-static int hook_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp, size_t newlen) {
+static int __attribute__((used)) hook_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, void *newp, size_t newlen) {
     int ret = orig_sysctl(name, namelen, oldp, oldlenp, newp, newlen);
     if (namelen == 4 && name[0] == CTL_KERN && name[1] == KERN_PROC && name[2] == KERN_PROC_PID) {
         if (ret == 0 && oldp && *oldlenp >= sizeof(struct kinfo_proc)) {
@@ -193,7 +193,7 @@ static int hook_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp, vo
 }
 
 static const char *(*orig_class_getImageName)(Class);
-static const char *hook_class_getImageName(Class cls) {
+static const char * __attribute__((used)) hook_class_getImageName(Class cls) {
     const char *name = orig_class_getImageName(cls);
     if (name) {
         if (strstr(name, "Wolfox") || strstr(name, "Spoof") || strstr(name, "FakeGPS")) return "/usr/lib/libobjc.A.dylib";
@@ -202,7 +202,7 @@ static const char *hook_class_getImageName(Class cls) {
 }
 
 static void (*orig_alert_viewWillAppear)(id, SEL, BOOL);
-static void hook_alert_viewWillAppear(UIAlertController *self, SEL _cmd, BOOL animated) {
+static void __attribute__((used)) hook_alert_viewWillAppear(UIAlertController *self, SEL _cmd, BOOL animated) {
     NSString *title = self.title.lowercaseString ?: @"";
     NSString *msg   = self.message.lowercaseString ?: @"";
     
