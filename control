@@ -1,0 +1,9 @@
+Package: com.wolfox.gpsksa
+Name: Gps Wolfox KSA
+Depends: mobilesubstrate
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Advanced GPS Spoofing tool for iOS with Overlay UI.
+Maintainer: Wolfox
+Author: Wolfox
+Section: Tweaks
