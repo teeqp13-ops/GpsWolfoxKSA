@@ -1,8 +1,8 @@
-Package: com.khalid.gpsplus
-Name: GPS Plus
+Package: com.khalid.gpsq
+Name: gpsq
 Version: 1.1
 Architecture: iphoneos-arm64
-Description: GPS Plus v1.1 Arabic map control panel with 8-character activation code and automatic UDID/UUID detection for iOS 16+.
+Description: gpsq v1.1 Arabic GPS Plus control panel with 8-character activation code and automatic UDID/UUID detection for iOS 16+.
 Maintainer: Khalid
 Author: Khalid
 Section: Tweaks
