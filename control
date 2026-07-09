@@ -1,9 +1,9 @@
-Package: com.khalid.gps
-Name: GPS
-Version: 1.1.0
+Package: com.khalid.gpsplus
+Name: GPS Plus
+Version: 1.1
 Architecture: iphoneos-arm64
-Description: Arabic GPS map/search/favorites control panel with Google Maps and Apple Maps input support.
+Description: GPS Plus v1.1 Arabic map control panel with 8-character activation code and automatic UDID/UUID detection for iOS 16+.
 Maintainer: Khalid
 Author: Khalid
 Section: Tweaks
-Depends: mobilesubstrate | ellekit, firmware (>= 14.0)
+Depends: mobilesubstrate | ellekit, firmware (>= 16.0)
