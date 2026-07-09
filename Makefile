@@ -6,11 +6,11 @@ THEOS_PACKAGE_SCHEME ?= rootless
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = GPSPlus
+TWEAK_NAME = gpsq
 
-GPSPlus_FILES = KSA.mm
-GPSPlus_FRAMEWORKS = UIKit Foundation CoreLocation MapKit QuartzCore
-GPSPlus_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-function -DGPSPLUS_VERSION=1.1
-GPSPlus_CCFLAGS = -std=c++17
+gpsq_FILES = gpsq.mm
+gpsq_FRAMEWORKS = UIKit Foundation CoreLocation MapKit QuartzCore
+gpsq_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-function
+gpsq_CCFLAGS = -std=c++17
 
 include $(THEOS_MAKE_PATH)/tweak.mk
