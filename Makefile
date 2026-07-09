@@ -1,14 +1,16 @@
-ARCHS = arm64 arm64e
-TARGET := iphone:clang:latest:14.0
-INSTALL_TARGET_PROCESSES = Maps
+export TARGET = iphone:clang:latest:16.0
+export ARCHS = arm64 arm64e
+
+INSTALL_TARGET_PROCESSES = SpringBoard Maps
 THEOS_PACKAGE_SCHEME ?= rootless
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = GPS
-GPS_FILES = Sources/GPS.mm Sources/GPSApiClient.mm
-GPS_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-function
-GPS_CCFLAGS = -std=c++17
-GPS_FRAMEWORKS = UIKit Foundation CoreLocation MapKit QuartzCore
+TWEAK_NAME = GPSPlus
+
+GPSPlus_FILES = KSA.mm
+GPSPlus_FRAMEWORKS = UIKit Foundation CoreLocation MapKit QuartzCore
+GPSPlus_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-function -DGPSPLUS_VERSION=1.1
+GPSPlus_CCFLAGS = -std=c++17
 
 include $(THEOS_MAKE_PATH)/tweak.mk
