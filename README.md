@@ -48,3 +48,21 @@
 - لا يستخدم `method_swizzling` أو `Hooks` من أي نوع.
 
 كل التأثير محصور داخل الكلاسات الخاصة بتطبيقك، وتقرر أنت متى وأين تُستخدم.
+
+## بناء حزمة DEB
+
+يتم البناء تلقائيًا عبر GitHub Actions عند كل Push أو Pull Request إلى `main`.
+بعد نجاح Workflow باسم **Build GPS Plus Tweak** حمّل Artifact باسم:
+
+```text
+GPSPlus-DEB-Packages
+```
+
+وللبناء محليًا باستخدام Theos:
+
+```bash
+make clean
+make package FINALPACKAGE=1
+```
+
+ستظهر الحزمة النهائية داخل مجلد `packages/`.
