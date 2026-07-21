@@ -1,0 +1,22 @@
+{
+  "project": "GPS",
+  "version": "1.2.0-integrated-installer",
+  "created_at": "2026-07-08T21:25:18.590396",
+  "added_files": [
+    "install.sh",
+    "tools/verify_all.sh",
+    "tools/merge_api_config.sh",
+    "tools/run_local_server.sh",
+    "tools/backup_server.php",
+    "server/public/api/ping.php",
+    "docs/INSTALLER_AND_MERGE_GUIDE_AR.md",
+    "docs/FINAL_REASSEMBLY_CHECK_AR.md"
+  ],
+  "entry_points": {
+    "server_installer": "server/public/install.php",
+    "root_installer_redirect": "install.php",
+    "admin_panel": "server/public/index.php",
+    "api_ping": "server/public/api/ping.php",
+    "local_installer": "install.sh"
+  }
+}

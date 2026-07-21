@@ -1,0 +1,174 @@
+[
+  {
+    "path": "GPS.mm",
+    "size": 52020
+  },
+  {
+    "path": "Makefile",
+    "size": 429
+  },
+  {
+    "path": "control",
+    "size": 289
+  },
+  {
+    "path": "GPS.plist",
+    "size": 86
+  },
+  {
+    "path": "README_AR.md",
+    "size": 3082
+  },
+  {
+    "path": ".gitignore",
+    "size": 41
+  },
+  {
+    "path": "GPS_Project_Index.json",
+    "size": 1970
+  },
+  {
+    "path": "Sources/GPS.mm",
+    "size": 52020
+  },
+  {
+    "path": "Sources/GPSApiClient.h",
+    "size": 639
+  },
+  {
+    "path": "Sources/GPSApiClient.mm",
+    "size": 3786
+  },
+  {
+    "path": "docs/PROJECT_STRUCTURE_AR.md",
+    "size": 1289
+  },
+  {
+    "path": "docs/IMPLEMENTATION_GUIDE_AR.md",
+    "size": 1933
+  },
+  {
+    "path": "docs/FILE_ANALYSIS_SUMMARY_AR.md",
+    "size": 1139
+  },
+  {
+    "path": "docs/CHECK_REPORT_AR.md",
+    "size": 2616
+  },
+  {
+    "path": "docs/ADMIN_PANEL_GUIDE_AR.md",
+    "size": 1267
+  },
+  {
+    "path": "docs/API_LINKING_GUIDE_AR.md",
+    "size": 2128
+  },
+  {
+    "path": "docs/DB_SCHEMA_AR.md",
+    "size": 656
+  },
+  {
+    "path": "docs/FULL_LINKING_STEPS_AR.md",
+    "size": 1768
+  },
+  {
+    "path": "docs/ADMIN_BUILD_CHECK_REPORT_AR.md",
+    "size": 697
+  },
+  {
+    "path": "scripts/build-rootless.sh",
+    "size": 286
+  },
+  {
+    "path": "scripts/build-rootful.sh",
+    "size": 277
+  },
+  {
+    "path": "scripts/install-device.sh",
+    "size": 542
+  },
+  {
+    "path": "scripts/clean.sh",
+    "size": 138
+  },
+  {
+    "path": "assets/preview.png",
+    "size": 1821865
+  },
+  {
+    "path": "assets/reference_ui.png",
+    "size": 1058513
+  },
+  {
+    "path": "server/.htaccess",
+    "size": 85
+  },
+  {
+    "path": "server/README_AR.md",
+    "size": 1305
+  },
+  {
+    "path": "server/app/config.example.php",
+    "size": 398
+  },
+  {
+    "path": "server/public/install.php",
+    "size": 3053
+  },
+  {
+    "path": "server/public/index.php",
+    "size": 21387
+  },
+  {
+    "path": "server/public/.htaccess",
+    "size": 71
+  },
+  {
+    "path": "server/storage/.htaccess",
+    "size": 19
+  },
+  {
+    "path": "server/client_snippets/objective-c/GPSApiClient.h",
+    "size": 639
+  },
+  {
+    "path": "server/client_snippets/objective-c/GPSApiClient.mm",
+    "size": 3786
+  },
+  {
+    "path": "server/client_snippets/php/example_activate.php",
+    "size": 587
+  },
+  {
+    "path": "server/public/api/activate.php",
+    "size": 4741
+  },
+  {
+    "path": "server/public/api/status.php",
+    "size": 2206
+  },
+  {
+    "path": "server/public/api/config.php",
+    "size": 946
+  },
+  {
+    "path": "server/public/api/heartbeat.php",
+    "size": 1072
+  },
+  {
+    "path": "server/public/api/upload_image.php",
+    "size": 1905
+  },
+  {
+    "path": "server/public/assets/style.css",
+    "size": 3140
+  },
+  {
+    "path": "server/app/lib/bootstrap.php",
+    "size": 10840
+  },
+  {
+    "path": "layout/Library/PreferenceLoader/Preferences/GPS.plist",
+    "size": 208
+  }
+]

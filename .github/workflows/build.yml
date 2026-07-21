@@ -1,16 +1,26 @@
-name: Build KSA Tweak
+name: Build GPS Plus Tweak
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
   build:
+    name: Build DEB Package
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -19,10 +29,27 @@ jobs:
 
       - name: Build package
         run: |
+          set -e
+          make clean || true
           make package FINALPACKAGE=1
-        
-      - name: Upload Artifact
+
+      - name: Collect build artifacts
+        if: always()
+        run: |
+          mkdir -p artifacts
+          echo "Searching for DEB files..." | tee artifacts/build-info.txt
+          find . -type f -name "*.deb" -not -path "./.git/*" -print | tee artifacts/deb-list.txt
+          while IFS= read -r deb; do
+            [ -n "$deb" ] && cp -v "$deb" artifacts/
+          done < artifacts/deb-list.txt
+          echo "Artifact folder content:" | tee -a artifacts/build-info.txt
+          ls -lah artifacts | tee -a artifacts/build-info.txt
+
+      - name: Upload DEB Artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: KSA-Tweak-Deb
-          path: packages/*.deb
+          name: GPSPlus-DEB-Packages
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,96 @@
+{
+  "project": "GPS",
+  "version": "1.1.0",
+  "files": [
+    {
+      "path": ".gitignore",
+      "size": 41,
+      "sha256": "378eb76fc649886d"
+    },
+    {
+      "path": "GPS.mm",
+      "size": 52020,
+      "sha256": "bc69e6534af9d03c"
+    },
+    {
+      "path": "GPS.plist",
+      "size": 86,
+      "sha256": "4b0a4daacc3397dc"
+    },
+    {
+      "path": "Makefile",
+      "size": 405,
+      "sha256": "92daa17261024bd2"
+    },
+    {
+      "path": "README_AR.md",
+      "size": 2388,
+      "sha256": "a096ef48598e2b64"
+    },
+    {
+      "path": "Sources/GPS.mm",
+      "size": 52020,
+      "sha256": "bc69e6534af9d03c"
+    },
+    {
+      "path": "assets/preview.png",
+      "size": 1821865,
+      "sha256": "2f5d5582989f252c"
+    },
+    {
+      "path": "assets/reference_ui.png",
+      "size": 1058513,
+      "sha256": "32f61cfc3d29aed7"
+    },
+    {
+      "path": "control",
+      "size": 289,
+      "sha256": "73207d31c2776ace"
+    },
+    {
+      "path": "docs/CHECK_REPORT_AR.md",
+      "size": 2616,
+      "sha256": "d22a3faaf5df5b98"
+    },
+    {
+      "path": "docs/FILE_ANALYSIS_SUMMARY_AR.md",
+      "size": 1139,
+      "sha256": "d029bf820ff156e8"
+    },
+    {
+      "path": "docs/IMPLEMENTATION_GUIDE_AR.md",
+      "size": 1933,
+      "sha256": "822eb96886d2a9c9"
+    },
+    {
+      "path": "docs/PROJECT_STRUCTURE_AR.md",
+      "size": 1289,
+      "sha256": "8e26a8fce8c92be3"
+    },
+    {
+      "path": "layout/Library/PreferenceLoader/Preferences/GPS.plist",
+      "size": 208,
+      "sha256": "d6a0031840679545"
+    },
+    {
+      "path": "scripts/build-rootful.sh",
+      "size": 277,
+      "sha256": "55adfb238e193d03"
+    },
+    {
+      "path": "scripts/build-rootless.sh",
+      "size": 286,
+      "sha256": "4d449c3e353c6d2e"
+    },
+    {
+      "path": "scripts/clean.sh",
+      "size": 138,
+      "sha256": "de373f7140b17bad"
+    },
+    {
+      "path": "scripts/install-device.sh",
+      "size": 542,
+      "sha256": "9a76f902f52fcfb1"
+    }
+  ]
+}
